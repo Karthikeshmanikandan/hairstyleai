@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HairstyleAI</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>HairstyleAI</h1>
+        <p>Discover your perfect hairstyle using AI</p>
+      </header>
+
+      <main>
+        <div class="camera-container">
+          <video id="webcam" autoplay playsinline></video>
+          <canvas id="canvas"></canvas>
+          <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading face detection...</p>
+          </div>
+          <p id="status" class="status">Initializing camera...</p>
+        </div>
+
+        <div class="suggestions">
+          <h2>Suggested Hairstyles</h2>
+          <div id="hairstyles" class="hairstyles-grid">
+            <div class="placeholder">
+              <div class="camera-icon">📷</div>
+              <p>Position your face in the camera to get hairstyle suggestions</p>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
