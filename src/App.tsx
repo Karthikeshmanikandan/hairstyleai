@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Camera, RefreshCw } from 'lucide-react';
 
 function App() {
@@ -6,6 +6,7 @@ function App() {
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [cameraActive, setCameraActive] = useState(false);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const hairstyleSuggestions = [
     "Modern Textured Quiff",
@@ -22,9 +23,24 @@ function App() {
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // Stop any existing stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "user"
+        }
+      });
+      
+      streamRef.current = stream;
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.play();
         setCameraActive(true);
       }
     } catch (err) {
@@ -33,23 +49,37 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    // Cleanup function to stop the camera stream when component unmounts
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+
   const capturePhoto = () => {
     if (videoRef.current) {
       const canvas = document.createElement('canvas');
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
-      canvas.getContext('2d')?.drawImage(videoRef.current, 0, 0);
-      const photoData = canvas.toDataURL('image/jpeg');
-      setPhoto(photoData);
+      const ctx = canvas.getContext('2d');
       
-      // Stop the camera stream
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream?.getTracks().forEach(track => track.stop());
-      setCameraActive(false);
-      
-      // Generate a random suggestion
-      const randomSuggestion = hairstyleSuggestions[Math.floor(Math.random() * hairstyleSuggestions.length)];
-      setSuggestion(randomSuggestion);
+      if (ctx) {
+        ctx.drawImage(videoRef.current, 0, 0);
+        const photoData = canvas.toDataURL('image/jpeg');
+        setPhoto(photoData);
+        
+        // Stop the camera stream
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+        }
+        setCameraActive(false);
+        
+        // Generate a random suggestion
+        const randomSuggestion = hairstyleSuggestions[Math.floor(Math.random() * hairstyleSuggestions.length)];
+        setSuggestion(randomSuggestion);
+      }
     }
   };
 
@@ -84,6 +114,7 @@ function App() {
                 ref={videoRef}
                 autoPlay
                 playsInline
+                muted
                 className="w-full h-full object-cover"
               />
             )}
